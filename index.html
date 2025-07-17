@@ -27,6 +27,26 @@
         h1 {
             margin: 1rem 0;
         }
+
+        .custom-button button {
+            background-color: #956134; /* brown */
+            color: #fbe8b4;
+            border: none;
+            border-radius: 5px;
+            font-size: 26px;
+            font-family: Georgia, serif;
+            border-radius: 20px;
+            box-shadow: inset 0 1px 3px rgba(255, 255, 255, 0.3), 2px 2px 4px rgba(0,0,0,0.2);
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            border: 3px solid #fbe8b4;
+            width: 250px;
+            height: 75px;
+            }
+            .custom-button button:hover {
+            background-color: #8B4513;
+            transform: scale(1);
+            }
     </style>
 
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs/qrcode.min.js"></script>
@@ -35,8 +55,12 @@
 <body>
 
     <!-- <h1>I hope I don't flop this project</h1> -->
+    <div id="mapButton" class="custom-button" style="position: absolute; z-index: 9999;">
+        <button>Video Demo</button>
+    </div>
     <div id="map"></div>
 
+    
     <script>
         // Image map dimensions
         const mapWidth = 1080;
@@ -56,6 +80,7 @@
             minZoom: -1,
             maxZoom: 2,
             zoomControl: true
+            
         });
 
         // Image overlay using pixel bounds
@@ -86,6 +111,7 @@
                 .bindPopup(`<b>${place.name}</b>`);
         });
 
+       
         // Live user tracking marker
         let userMarker = null;
         let accuracyCircle = null;
@@ -137,6 +163,13 @@
             const y = (10.994336672238893 - lat) * 79646.9 + 1200;
             return [y, x];
         }
+        
+        
+            document.querySelector('#mapButton button').addEventListener('click', () => {
+                window.open('https://www.canva.com/design/DAGtTkX7508/aszzDbtzHvr10J-7QVC-8g/watch');
+            });
+
+        
     </script>
 
 </body>

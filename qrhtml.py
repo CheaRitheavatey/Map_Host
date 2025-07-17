@@ -2,7 +2,7 @@ import qrcode
 import qrcode.constants
 
 # url of the index.html
-url = ""
+url = "https://chearitheavatey.github.io/Map_Host/"
 qr = qrcode.QRCode(
     version=1,
     error_correction=qrcode.constants.ERROR_CORRECT_H,
@@ -10,7 +10,8 @@ qr = qrcode.QRCode(
     border=4
 )
 
-qr.add_data(url).make(fit=True)
+qr.add_data(url)
+qr.make(fit=True)
 
 # make img qrcode
 img = qr.make_image().save("QR_Map.png")
