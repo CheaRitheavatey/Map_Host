@@ -3,7 +3,7 @@ import qrcode.constants
 
 # url of the index.html
 # url = "https://chearitheavatey.github.io/Map_Host/"
-url = "https://www.canva.com/design/DAGtTkX7508/aszzDbtzHvr10J-7QVC-8g/watch"
+url = "https://chearitheavatey.github.io/Map_Host/"
 qr = qrcode.QRCode(
     version=1,
     error_correction=qrcode.constants.ERROR_CORRECT_H,

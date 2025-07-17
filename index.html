@@ -4,8 +4,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ibetternotflopthis</title>
-
+    <title>Angkor Borei Map</title>
 
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
         integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
@@ -15,79 +14,96 @@
     <style>
         body {
             margin: 0;
+            padding: 0;
+            overflow: hidden;
             font-family: sans-serif;
-            text-align: center;
         }
 
         #map {
-            height: 90vh;
-            width: 100%;
+            height: 100vh;
+            width: 100vw;
         }
 
-        h1 {
-            margin: 1rem 0;
+        .custom-button {
+            position: absolute;
+            z-index: 9999;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
         }
 
         .custom-button button {
-            background-color: #956134; /* brown */
+            background-color: #956134;
             color: #fbe8b4;
             border: none;
-            border-radius: 5px;
+            border-radius: 20px;
             font-size: 26px;
             font-family: Georgia, serif;
-            border-radius: 20px;
-            box-shadow: inset 0 1px 3px rgba(255, 255, 255, 0.3), 2px 2px 4px rgba(0,0,0,0.2);
+            box-shadow: inset 0 1px 3px rgba(255, 255, 255, 0.3), 2px 2px 4px rgba(0, 0, 0, 0.2);
             cursor: pointer;
             transition: all 0.2s ease-in-out;
             border: 3px solid #fbe8b4;
-            width: 250px;
-            height: 75px;
-            }
-            .custom-button button:hover {
-            background-color: #8B4513;
-            transform: scale(1);
-            }
-    </style>
+            width: 200px;
+            height: 55px;
+        }
 
-    <script src="https://cdn.jsdelivr.net/npm/qrcodejs/qrcode.min.js"></script>
+        .custom-button button:hover {
+            background-color: #8B4513;
+        }
+        
+    </style>
 </head>
 
 <body>
-
-    <!-- <h1>I hope I don't flop this project</h1> -->
-    <div id="mapButton" class="custom-button" style="position: absolute; z-index: 9999;">
+    <div id="map"></div>
+    <div id="mapButton" class="custom-button">
         <button>Video Demo</button>
     </div>
-    <div id="map"></div>
 
-    
     <script>
-        // Image map dimensions
+        // Image dimensions
         const mapWidth = 1080;
         const mapHeight = 1920;
 
-        //  GPS bounds of angkor borei matching the image (adjust to match your map)
-        const geoBounds = {
-            latTop: 10.9958,
-            latBottom: 10.8167,
-            lngLeft: 104.9667,
-            lngRight: 104.9753
-        };
+        // Create a custom CRS that matches the image exactly
+        const CustomCRS = L.extend({}, L.CRS.Simple, {
+            // Disable infinite world wrapping
+            infinite: false,
 
-        // Set up Leaflet map with Simple CRS (image coords)
-        const map = L.map('map', {
-            crs: L.CRS.Simple,
-            minZoom: -1,
-            maxZoom: 2,
-            zoomControl: true
-            
+            // Set the transformation between image coordinates and CRS coordinates
+            transformation: new L.Transformation(1, 0, -1, mapHeight),
+
+            // Set the projected bounds to match the image
+            bounds: L.bounds([0, 0], [mapWidth, mapHeight])
         });
 
-        // Image overlay using pixel bounds
+        // Initialize the map with custom options
+        const map = L.map('map', {
+            crs: CustomCRS,
+            minZoom: -1,
+            maxZoom: 3,
+            zoomControl: true,
+            maxBounds: [[0, 0], [mapHeight, mapWidth]], // Restrict panning to image bounds
+            maxBoundsViscosity: 1.0, // Strictly enforce bounds
+            attributionControl: false
+        });
+
+        // Image overlay - using the full image bounds
         const imageBounds = [[0, 0], [mapHeight, mapWidth]];
         L.imageOverlay('map1.png', imageBounds).addTo(map);
+
+        // Fit the map to show the entire image initially
         map.fitBounds(imageBounds);
 
+        // Create an icon that maintains size during zoom
+        const createStaticIcon = (iconUrl, size) => {
+            return L.divIcon({
+                html: `<img src="${iconUrl}" style="width: ${size[0]}px; height: ${size[1]}px;">`,
+                className: 'static-marker-icon',
+                iconSize: size,
+                iconAnchor: [size[0] / 2, size[1]] // Anchor at bottom center
+            });
+        };
         // Static attractions on the image (use image [y, x] coords)
         const attractions = [
             { name: "Restaurant", coords: [1200, 250] },
@@ -105,33 +121,38 @@
             className: 'custom-icon'
         });
 
-        attractions.forEach(place => {
-            L.marker(place.coords, { icon: attractionIcon })
+        // Add attractions to the map
+        /* attractions.forEach(place => {
+            L.marker([place.coords[0], place.coords[1]], { icon: attractionIcon })
                 .addTo(map)
                 .bindPopup(`<b>${place.name}</b>`);
+        }); */
+
+        // Add attractions to the map with static-sized icons
+        attractions.forEach(place => {
+            L.marker([place.coords[0], place.coords[1]], {
+                icon: createStaticIcon('pin.png', [40, 40])
+            }).addTo(map).bindPopup(`<b>${place.name}</b>`);
         });
 
-       
         // Live user tracking marker
         let userMarker = null;
         let accuracyCircle = null;
 
         function updateLocation(pos) {
-            // const lat = pos.coords.latitude;
-            // const lng = pos.coords.longitude;
-
-            // testing coords not a real one
+            // Testing coordinates - replace with real GPS data
             const lat = 11.002903006000126;
             const lng = 104.9790000259579;
 
-            const coords = latLngToImageXY(lat, lng, geoBounds, mapWidth, mapHeight);
-            console.log("map coord to img: ", coords);
-            if (userMarker) {
+            // Convert to image coordinates
+            const coords = latLngToImageXY(lat, lng);
+
+             if (userMarker) {
                 userMarker.setLatLng(coords);
                 accuracyCircle.setLatLng(coords);
             } else {
                 userMarker = L.marker(coords, {
-                    icon: L.icon({ iconUrl: 'here.png', iconSize: [30, 30] })
+                    icon: createStaticIcon('here.png', [30, 30])
                 }).addTo(map).bindPopup("You are here");
 
                 accuracyCircle = L.circle(coords, {
@@ -147,6 +168,15 @@
             console.warn("Location error:", err);
         }
 
+        // Convert real GPS to image coordinates
+        function latLngToImageXY(lat, lng) {
+            // Adjust these conversion factors to properly map GPS to the image
+            const x = (lng - 104.9778547648623) * 44561.8 + 500;
+            const y = (10.994336672238893 - lat) * 79646.9 + 1200;
+            return [y, x];
+        }
+
+        // Set up geolocation
         const geoOptions = {
             enableHighAccuracy: true,
             timeout: 5000,
@@ -155,23 +185,13 @@
 
         navigator.geolocation.watchPosition(updateLocation, error, geoOptions);
 
-        // Convert real GPS to image [y, x] coordinates
-        function latLngToImageXY(lat, lng, bounds, imageWidth, imageHeight) {
-            const { latTop, latBottom, lngLeft, lngRight } = bounds;
-
-            const x = (lng - 104.9778547648623) * 44561.8 + 500;
-            const y = (10.994336672238893 - lat) * 79646.9 + 1200;
-            return [y, x];
-        }
-        
-        
-            document.querySelector('#mapButton button').addEventListener('click', () => {
-                window.open('https://www.canva.com/design/DAGtTkX7508/aszzDbtzHvr10J-7QVC-8g/watch');
-            });
+        // Video demo button
+        document.querySelector('#mapButton button').addEventListener('click', () => {
+            window.open('https://www.canva.com/design/DAGtTkX7508/aszzDbtzHvr10J-7QVC-8g/watch');
+        });
 
         
     </script>
-
 </body>
 
 </html>
