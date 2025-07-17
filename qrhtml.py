@@ -2,7 +2,8 @@ import qrcode
 import qrcode.constants
 
 # url of the index.html
-url = "https://chearitheavatey.github.io/Map_Host/"
+# url = "https://chearitheavatey.github.io/Map_Host/"
+url = "https://www.canva.com/design/DAGtTkX7508/aszzDbtzHvr10J-7QVC-8g/watch"
 qr = qrcode.QRCode(
     version=1,
     error_correction=qrcode.constants.ERROR_CORRECT_H,
@@ -14,5 +15,5 @@ qr.add_data(url)
 qr.make(fit=True)
 
 # make img qrcode
-img = qr.make_image().save("QR_Map.png")
-print("QR code saved as QR_Map.png")
+img = qr.make_image().save("DemoVid.png")
+print("QR code saved as DemoVid.png")
