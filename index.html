@@ -50,14 +50,88 @@
         .custom-button button:hover {
             background-color: #8B4513;
         }
-        
+
+        /* New styles for attraction popup */
+        .attraction-popup-overlay {
+            position: fixed;
+            left: 0;
+            right: 0;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 10000;
+            transition: bottom 0.4s ease-out;
+            bottom: -100%;
+        }
+
+        .attraction-popup-overlay.active {
+            bottom: 0;
+        }
+
+        .attraction-popup-content {
+            background: white;
+            padding: 30px;
+            border-radius: 20px 20px 0 0;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.2);
+            position: relative;
+        }
+
+        .attraction-close-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            font-size: 24px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #666;
+        }
+
+        .attraction-popup-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+
+        .location-status {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            z-index: 1000;
+            color: #333;
+        }
+
+        .location-status.active {
+            color: #28a745;
+        }
+
+        .location-status.error {
+            color: #dc3545;
+        }
     </style>
 </head>
 
 <body>
     <div id="map"></div>
+    <div class="location-status" id="locationStatus">📍 Locating...</div>
     <div id="mapButton" class="custom-button">
         <button>Video Demo</button>
+    </div>
+
+    <!-- New attraction popup structure -->
+    <div class="attraction-popup-overlay" id="attractionPopup">
+        <div class="attraction-popup-content">
+            <button class="attraction-close-btn" onclick="closeAttractionPopup()">×</button>
+            <img src="" class="attraction-popup-image" id="popupImage">
+            <h2 id="popupTitle"></h2>
+            <p id="popupDescription"></p>
+        </div>
     </div>
 
     <script>
@@ -67,33 +141,35 @@
 
         // Create a custom CRS that matches the image exactly
         const CustomCRS = L.extend({}, L.CRS.Simple, {
-            // Disable infinite world wrapping
             infinite: false,
-
-            // Set the transformation between image coordinates and CRS coordinates
             transformation: new L.Transformation(1, 0, -1, mapHeight),
-
-            // Set the projected bounds to match the image
             bounds: L.bounds([0, 0], [mapWidth, mapHeight])
         });
 
-        // Initialize the map with custom options
+        // Initialize the map
         const map = L.map('map', {
             crs: CustomCRS,
             minZoom: -1,
             maxZoom: 3,
             zoomControl: true,
-            maxBounds: [[0, 0], [mapHeight, mapWidth]], // Restrict panning to image bounds
-            maxBoundsViscosity: 1.0, // Strictly enforce bounds
+            maxBounds: [[0, 0], [mapHeight, mapWidth]],
+            maxBoundsViscosity: 1.0,
             attributionControl: false
         });
 
-        // Image overlay - using the full image bounds
+        // Image overlay
         const imageBounds = [[0, 0], [mapHeight, mapWidth]];
         L.imageOverlay('map1.png', imageBounds).addTo(map);
-
-        // Fit the map to show the entire image initially
         map.fitBounds(imageBounds);
+
+        // Add map click event to close popup
+        map.on('click', function(e) {
+            // Check if popup is open and close it
+            const popup = document.getElementById('attractionPopup');
+            if (popup.classList.contains('active')) {
+                closeAttractionPopup();
+            }
+        });
 
         // Create an icon that maintains size during zoom
         const createStaticIcon = (iconUrl, size) => {
@@ -101,98 +177,165 @@
                 html: `<img src="${iconUrl}" style="width: ${size[0]}px; height: ${size[1]}px;">`,
                 className: 'static-marker-icon',
                 iconSize: size,
-                iconAnchor: [size[0] / 2, size[1]] // Anchor at bottom center
+                iconAnchor: [size[0] / 2, size[1]]
             });
         };
-        // Static attractions on the image (use image [y, x] coords)
+
+        // Attraction data with additional information for popups
         const attractions = [
-            { name: "Restaurant", coords: [1200, 250] },
-            { name: "Angkor Borei Musuem", coords: [1200, 500] },
-            { name: "Angkor Borei Craft Community", coords: [1080, 250] },
-            { name: "Coffee Shop", coords: [950, 920] },
-            { name: "Lobster", coords: [850, 650] },
-            { name: "CTC Center", coords: [580, 660] },
-            { name: "Mountain", coords: [350, 900] }
+            {
+                name: "Restaurant",
+                coords: [1200, 250],
+                image: "restaurant.png",
+                description: "Enjoy local Khmer cuisine with traditional flavors."
+            },
+            {
+                name: "Angkor Borei Museum",
+                coords: [1200, 500],
+                image: "museum.png",
+                description: "Discover ancient artifacts and learn about the region's history."
+            },
+            {
+                name: "Angkor Borei Craft Community",
+                coords: [1080, 250],
+                image: "craft.png",
+                description: "See local artisans creating traditional handicrafts."
+            },
+            {
+                name: "Coffee Shop",
+                coords: [950, 920],
+                image: "coffee.png",
+                description: "Relax with a cup of locally grown coffee."
+            },
+            {
+                name: "Lobster",
+                coords: [850, 650],
+                image: "lobster.png",
+                description: "Hand-on experience in feeding baby lobsters and learn the process of lobster farming."
+            },
+            {
+                name: "CTC Center",
+                coords: [580, 660],
+                image: "ctc.png",
+                description: "Community Tech Center with information about local attractions, located in Angkor Borei School."
+            },
+            {
+                name: "Mountain",
+                coords: [350, 900],
+                image: "mountain.png",
+                description: "Scenic viewpoint with panoramic views of the surrounding area."
+            },
         ];
 
-        const attractionIcon = L.icon({
-            iconUrl: 'pin.png',
-            iconSize: [40, 40],
-            className: 'custom-icon'
+        // Function to open attraction popup
+        function openAttractionPopup(attraction) {
+            document.getElementById('popupTitle').textContent = attraction.name;
+            document.getElementById('popupDescription').textContent = attraction.description;
+            document.getElementById('popupImage').src = attraction.image;
+
+            document.getElementById('attractionPopup').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        // Function to close attraction popup
+        function closeAttractionPopup() {
+            document.getElementById('attractionPopup').classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        // Close popup when clicking outside content
+        document.getElementById('attractionPopup').addEventListener('click', function (e) {
+            if (e.target === this) {
+                closeAttractionPopup();
+            }
         });
 
-        // Add attractions to the map
-        /* attractions.forEach(place => {
-            L.marker([place.coords[0], place.coords[1]], { icon: attractionIcon })
-                .addTo(map)
-                .bindPopup(`<b>${place.name}</b>`);
-        }); */
-
-        // Add attractions to the map with static-sized icons
+        // Add attractions to the map with click handlers
         attractions.forEach(place => {
-            L.marker([place.coords[0], place.coords[1]], {
+            const marker = L.marker([place.coords[0], place.coords[1]], {
                 icon: createStaticIcon('pin.png', [40, 40])
-            }).addTo(map).bindPopup(`<b>${place.name}</b>`);
+            }).addTo(map);
+            
+            // Prevent map click event when clicking on markers
+            marker.on('click', function (e) {
+                L.DomEvent.stopPropagation(e);
+                openAttractionPopup(place);
+            });
         });
 
         // Live user tracking marker
         let userMarker = null;
         let accuracyCircle = null;
+        const locationStatus = document.getElementById('locationStatus');
 
         function updateLocation(pos) {
-            // track real time coordination
-            
-            // Testing coordinates - replace with real GPS data            
-            const lat = 11.002903006000126;
-            const lng = 104.9790000259579;
+            // Use real GPS coordinates from the position object
+            const lat = pos.coords.latitude;
+            const lng = pos.coords.longitude;
+            const accuracy = pos.coords.accuracy;
+
+            // Update location status
+            locationStatus.textContent = `📍 Location: ${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+            locationStatus.className = 'location-status active';
 
             // Convert to image coordinates
             const coords = latLngToImageXY(lat, lng);
 
-             if (userMarker) {
+            if (userMarker) {
                 userMarker.setLatLng(coords);
                 accuracyCircle.setLatLng(coords);
+                accuracyCircle.setRadius(accuracy / 2); // Adjust radius based on GPS accuracy
             } else {
                 userMarker = L.marker(coords, {
                     icon: createStaticIcon('here.png', [30, 30])
                 }).addTo(map).bindPopup("You are here");
 
                 accuracyCircle = L.circle(coords, {
-                    radius: 40,
+                    radius: accuracy / 2,
                     color: 'lightblue',
                     fillColor: 'lightblue',
                     fillOpacity: 0.2
                 }).addTo(map);
             }
+
+            // Optional: Center map on user location (uncomment if desired)
+            // map.setView(coords, map.getZoom());
         }
 
         function error(err) {
             console.warn("Location error:", err);
+            locationStatus.textContent = `❌ Location unavailable: ${err.message}`;
+            locationStatus.className = 'location-status error';
         }
 
-        // Convert real GPS to image coordinates
+        // Convert real GPS to image coordinates (adjusted for Phnom Penh area)
         function latLngToImageXY(lat, lng) {
-            // Adjust these conversion factors to properly map GPS to the image
-            const x = (lng - 104.9778547648623) * 44561.8 + 500;
-            const y = (10.994336672238893 - lat) * 79646.9 + 1200;
+            // For Angkor borei area
+            const x = (lng - 104.9779) * 50000 + 540;
+            const y = (10.9943 - lat) * 90000 + 960;
             return [y, x];
         }
 
-        // Set up geolocation
+        // Set up geolocation with enhanced options
         const geoOptions = {
             enableHighAccuracy: true,
-            timeout: 5000,
-            maximumAge: 0
+            timeout: 10000,
+            maximumAge: 1000 // Cache position for 1 second
         };
 
-        navigator.geolocation.watchPosition(updateLocation, error, geoOptions);
+        // Check if geolocation is supported
+        if (navigator.geolocation) {
+            locationStatus.textContent = '📍 Requesting location...';
+            navigator.geolocation.watchPosition(updateLocation, error, geoOptions);
+        } else {
+            locationStatus.textContent = '❌ Geolocation not supported';
+            locationStatus.className = 'location-status error';
+        }
 
         // Video demo button
         document.querySelector('#mapButton button').addEventListener('click', () => {
             window.open('https://www.canva.com/design/DAGtTkX7508/aszzDbtzHvr10J-7QVC-8g/watch');
         });
-
-        
     </script>
 </body>
 
