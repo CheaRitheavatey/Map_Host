@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        .card {
+            width: 300px;
+            border: 1px solid #ddd;
+            padding: 20px;
+            margin: 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .card:hover {
+            box-shadow: 0px 4px 8px rgba(0,0 , 0, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .popup-overlay {
+            position: fixed;
+            left: 0;
+            right: 0;
+            background: rgba(0,0 , 0, 0.5);
+            z-index: 1000;
+            transition: bottom 0.4s ease-out;
+            bottom: -100%;
+        }
+
+        .popup-overlay.active {bottom: 0;}
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            font-size: 24px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #666;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            font-size: 24px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #666;
+        }
+    
+    </style>
+</head>
+<body>
+    <!-- card -->
+     <div class="card" onclick="openBottomPopup()">
+        <h3>Card Title</h3>
+        <p>Click here for more detail</p>
+     </div>
+
+     <!-- pop up -->
+      <div class="popup-overlay" id="bottomPopup">
+        <div class="popup-content">
+            <button class="close-btn" onclick="closeBottomPopup()">×</button>
+
+            <h3>Detail information</h3>
+            <p>this content will slide up from the bottom</p>
+        </div>
+      </div>
+    
+
+    <!-- script -->
+    <script>
+        function openBottomPopup() {
+            document.getElementById('bottomPopup').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeBottomPopup() {
+            document.getElementById('bottomPopup').classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        document.getElementById('bottomPopup').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeBottomPopup();
+            }
+        });
+    </script>
+</body>
+</html>
