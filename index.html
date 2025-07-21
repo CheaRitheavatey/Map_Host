@@ -310,9 +310,16 @@
 
         // Convert real GPS to image coordinates (adjusted for Phnom Penh area)
         function latLngToImageXY(lat, lng) {
-            // For Angkor borei area
-            const x = (lng - 104.9779) * 50000 + 540;
-            const y = (10.9943 - lat) * 90000 + 960;
+           // X conversion (longitude to image X)
+            const xScale = -41666.67; // pixels per degree longitude
+            const xOffset = 4875000; // offset for longitude
+            const x = (lng * xScale) + xOffset;
+            
+            // Y conversion (latitude to image Y) 
+            const yScale = -69444.44; // pixels per degree latitude (negative because Y increases downward)
+            const yOffset = -762500; // offset for latitude
+            const y = (lat * yScale) + yOffset;
+            
             return [y, x];
         }
 
