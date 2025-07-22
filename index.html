@@ -56,7 +56,7 @@
             position: fixed;
             left: 0;
             right: 0;
-            background: rgba(0, 0, 0, 0.7);
+            background: none;
             z-index: 10000;
             transition: bottom 0.4s ease-out;
             bottom: -100%;
@@ -78,8 +78,8 @@
 
         .attraction-close-btn {
             position: absolute;
-            top: 15px;
-            right: 15px;
+            top: 5px;
+            right: 10px;
             font-size: 24px;
             background: none;
             border: none;
@@ -113,6 +113,29 @@
 
         .location-status.error {
             color: #dc3545;
+        }
+
+         /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .custom-button button {
+                font-size: 20px;
+                width: 160px;
+                height: 45px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .custom-button button {
+                font-size: 18px;
+                width: 140px;
+                height: 40px;
+            }
+        }
+        @media (max-width: 480px) {
+            .location-status {
+                font-size: 10px;
+                padding: 6px 8px;
+            }
         }
     </style>
 </head>
